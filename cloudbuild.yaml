@@ -1,17 +1,38 @@
 
 steps:
+# Step 1: Build Image
 - name: 'gcr.io/cloud-builders/docker'
-  args: ['build', '-t', 'us-central1-docker.pkg.dev/poetic-primer-497409-i6/ecommerce-repo/ecommerce-app:$SHORT_SHA', '.']
+  args: [
+    'build',
+    '-t',
+    'us-central1-docker.pkg.dev/$PROJECT_ID/ecommerce-repo/ecommerce-app:$SHORT_SHA',
+    '.'
+  ]
 
+# Step 2: Push Image
 - name: 'gcr.io/cloud-builders/docker'
-  args: ['push', 'us-central1-docker.pkg.dev/poetic-primer-497409-i6/ecommerce-repo/ecommerce-app:$SHORT_SHA']
+  args: [
+    'push',
+    'us-central1-docker.pkg.dev/$PROJECT_ID/ecommerce-repo/ecommerce-app:$SHORT_SHA'
+  ]
 
+# ✅ Step 3: Get GKE credentials (IMPORTANT FIX)
+- name: 'gcr.io/cloud-builders/gcloud'
+  args:
+  - 'container'
+  - 'clusters'
+  - 'get-credentials'
+  - 'ecommerce-cluster'
+  - '--zone'
+  - 'us-central1-a'
+
+# ✅ Step 4: Deploy update
 - name: 'gcr.io/cloud-builders/kubectl'
   args:
   - 'set'
   - 'image'
   - 'deployment/ecommerce-app'
-  - 'ecommerce=us-central1-docker.pkg.dev/poetic-primer-497409-i6/ecommerce-repo/ecommerce-app:$SHORT_SHA'
+  - 'ecommerce=us-central1-docker.pkg.dev/$PROJECT_ID/ecommerce-repo/ecommerce-app:$SHORT_SHA'
   env:
   - 'CLOUDSDK_COMPUTE_ZONE=us-central1-a'
   - 'CLOUDSDK_CONTAINER_CLUSTER=ecommerce-cluster'
